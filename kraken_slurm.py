@@ -35,16 +35,16 @@ def write_slurm_job(slurm_main_folder, result_folder, read1_path, read2_path, sa
     (
         "mkdir %s\n"
         "conda activate /mnt/lustre/groups/mager/magmu818/.conda/envs/kraken2\n"
-        "kraken2 --db /mnt/lustre/home/mager/magmu818/datasets/public_databases/kraken/bacteria --confidence 0.5 --use-names --paired "
-        "--report %s/kraken_out_05.kreport --threads 63 "
-        "--output %s/kraken_out_05 "
+        "kraken2 --db /mnt/lustre/home/mager/magmu818/datasets/public_databases/kraken/bacteria --use-names --paired "
+        "--report %s/kraken_out.kreport --threads 63 "
+        "--output %s/kraken_out "
         "%s "
         "%s"
         "\n"%(kraken_result_folder, kraken_result_folder, kraken_result_folder, kneaddata_read_1_path, kneaddata_read_2_path)
         +
         "kraken2 --db /mnt/lustre/home/mager/magmu818/datasets/public_databases/kraken/bacteria --confidence 0.5 --use-names --paired "
-        "--report %s/unfiltered_kraken_out_05.kreport --threads 63 "
-        "--output %s/unfiltered_kraken_out_05 "
+        "--report %s/unfiltered_kraken_out.kreport --threads 63 "
+        "--output %s/unfiltered_kraken_out "
         "%s "
         "%s"
         "\n\n\n"%(kraken_result_folder, kraken_result_folder, unfiltered_kneaddata_read_1_path, unfiltered_kneaddata_read_2_path)
