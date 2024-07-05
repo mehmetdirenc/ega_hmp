@@ -22,6 +22,19 @@ def create_metadata(manifest_filepath, metadata_filepath, patients_metadata_path
 
 
 
+def parse_seq_to_taxa(tax_tsv):
+    feature_id_taxa_dict = {}
+    with open(tax_tsv, "r") as tax_feature:
+        for line in tax_feature:
+            if line.startswith("Feature") or line.startswith("#"):
+                continue
+            split_line = line.split("\t")
+            feature_id = split_line[0]
+            full_tax = split_line[1]
+            feature_id_taxa_dict[feature_id] = full_tax
+
+
+
 
 
 
