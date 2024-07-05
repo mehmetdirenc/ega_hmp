@@ -1,5 +1,7 @@
 import os, sys, time
 from parse_metadata import *
+from qiime2_helpers import *
+
 
 import pandas as pd
 import seaborn as sns
@@ -65,11 +67,11 @@ def scatter_plot(df, min_read_threshold, min_percentage_threshold):
     #                                 "A3" : ">40 age"
     #                  }}
     if min_read_threshold == 0:
-        result_folder = os.path.join(os.path.dirname(summary_result_file), "normal_scale", "raw")
-        result_folder_log = os.path.join(os.path.dirname(summary_result_file), "log_scale", "raw")
+        result_folder = os.path.join(os.path.dirname(summary_result_file), "violin_normal_scale", "raw")
+        result_folder_log = os.path.join(os.path.dirname(summary_result_file), "violin_log_scale", "raw")
     else:
-        result_folder = os.path.join(os.path.dirname(summary_result_file), "normal_scale", "min_%sr_%sp"%(str(min_read_threshold), str(min_percentage_threshold).split(".")[1]))
-        result_folder_log = os.path.join(os.path.dirname(summary_result_file), "log_scale",
+        result_folder = os.path.join(os.path.dirname(summary_result_file), "violin_normal_scale", "min_%sr_%sp"%(str(min_read_threshold), str(min_percentage_threshold).split(".")[1]))
+        result_folder_log = os.path.join(os.path.dirname(summary_result_file), "violin_log_scale",
                                      "min_%sr_%sp" % (str(min_read_threshold), str(min_percentage_threshold).split(".")[1]))
     # if os.path.exists(result_folder) == False:
     #     os.mkdir(result_folder)
@@ -113,18 +115,19 @@ def scatter_plot(df, min_read_threshold, min_percentage_threshold):
                 x_u_list.sort()
                 fig, ax = plt.subplots()
                 ax.set(yscale="log")
-                sns.boxplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax).set_title(diagnosis)
-                sns.stripplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax, color="red", s=5).set_title(diagnosis)
+                sns.violinplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax).set_title(diagnosis)
+                # sns.boxplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax).set_title(diagnosis)
+                # sns.stripplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax, color="red", s=5).set_title(diagnosis)
                 plt.savefig(plt_path_log, bbox_inches='tight')
-                plt.clf()
-                plt.cla()
-                plt.close()
-                fig, ax = plt.subplots()
-                sns.boxplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list).set_title(diagnosis)
-                sns.stripplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, color="red", s=5).set_title(diagnosis)
-                plt.savefig(plt_path, bbox_inches='tight')
-                plt.clf()
-                plt.cla()
+                # plt.clf()
+                # plt.cla()
+                # plt.close()
+                # fig, ax = plt.subplots()
+                # sns.boxplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list).set_title(diagnosis)
+                # sns.stripplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, color="red", s=5).set_title(diagnosis)
+                # plt.savefig(plt_path, bbox_inches='tight')
+                # plt.clf()
+                # plt.cla()
                 # plt.show()
                 plt.close()
 
@@ -138,11 +141,14 @@ if __name__ == '__main__':
     # patient_phenotype_dict, header = create_patient_phenotype_dict(patients_metadata_path)
     # sample_to_patient_dict = create_sample_to_patient_dict(samples_tsv_path)
     # create_sample_to_patient_dict(samples_tsv_path)
-    write_summary(results_folder, samples_tsv_path, patients_metadata_path, summary_result_file)
+    # write_summary(results_folder, samples_tsv_path, patients_metadata_path, summary_result_file)
+    # abundance_table = "/mnt/lustre/projects/mager-1000ibd/results/ega/16s/EGAD00001008215/qiime/all_results/exported_abundance_table/metadata.tsv"
+    # tax_tsv = "/mnt/lustre/projects/mager-1000ibd/results/ega/16s/EGAD00001008215/qiime/all_results/exported_taxonomy/taxonomy.tsv"
+    # abundance_boi(abundance_table, tax_tsv)
     min_read_threshold = 50
     min_percentage_threshold = 0.001
     analyze_summary(summary_result_file, min_read_threshold, min_percentage_threshold)
-    # min_read_threshold = 0
-    # min_percentage_threshold = 0
-    # analyze_summary(summary_result_file, min_read_threshold, min_percentage_threshold)
+    min_read_threshold = 0
+    min_percentage_threshold = 0
+    analyze_summary(summary_result_file, min_read_threshold, min_percentage_threshold)
     # print("a")
