@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="magmu818@l1.m3c.uni-tuebingen.de:22 key (2)" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
+    <option name="confirmBeforeUploading" value="false" />
+    <serverData>
+      <paths name="magmu818@l1.m3c.uni-tuebingen.de:22 key">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/mnt/lustre/home/mager/magmu818/python_projects/ega" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="magmu818@l1.m3c.uni-tuebingen.de:22 key (2)">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/mnt/lustre/home/mager/magmu818/python_projects/ega" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
