@@ -1,4 +1,7 @@
 import os
+from pyvenn import *
+import pandas as pd
+from matplotlib import pyplot as plt
 
 def reads_to_samples(dataset_folder_path):
     sample_file_tsv = os.path.join(dataset_folder_path, "metadata", "sample_file.tsv")
@@ -45,11 +48,42 @@ def create_patient_phenotype_dict(phenotypes_tsv):
     return patient_phenotype_dict, header
 
 
+def create_venn_patient_ids(datasets, all_phenotypes):
+    res_filepath = os.path.join(os.path.dirname(all_phenotypes), "venn.png")
+    ds_dict_set = {}
+    genes = []
+    # ds_frame = pd.read_csv(all_phenotypes, sep="\t")
+    for dataset in datasets:
+        ds_path = datasets[dataset]
+        ds_frame = pd.read_csv(ds_path, sep="\t")
+        ds_dict_set[dataset] = set(ds_frame["subject_id"])
+    # exp_dict = dict(sorted(exp_dict.items()))
+    # for gene in exp_dict:
+    #     exp_dict_set[gene] = set(exp_dict[gene])
+    #     genes.append(gene)
+    labels1 = list(ds_dict_set.values())
+    labels, all_collections = get_labels(labels1)
+    fig, ax = venn4(labels, names=list(ds_dict_set.keys()))
+    fig = fig.tight_layout()
+    # plt.show()
+    plt.savefig(res_filepath)
+    plt.close()
+    return all_collections
+
 
 
 if __name__ == '__main__':
-    dataset_folder_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001004194/"
-    patients_metadata_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001003991/EGAF00002487099/EGA_Phenotypes_1000IBD_release_2.txt"
-    samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001004194/metadata/samples.tsv"
-    create_sample_to_patient_dict(samples_tsv_path)
+    # dataset_folder_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001004194/"
+    # patients_metadata_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001003991/EGAF00002487099/EGA_Phenotypes_1000IBD_release_2.txt"
+    # samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001004194/metadata/samples.tsv"
+    # create_sample_to_patient_dict(samples_tsv_path)
     # reads_to_samples(dataset_folder_path)
+    datasets =\
+    {
+        "16s_int_bio" : "/home/direnc/inputs/ega/EGAD00001003936_metadata/samples.tsv",
+        "metagenomics_feces" : "/home/direnc/inputs/ega/EGAD00001004194_metadata/samples.tsv",
+        "RNA_muc_bio" : "/home/direnc/inputs/ega/EGAD00001008214_metadata/samples.tsv",
+        "16s_muc_bio" : "/home/direnc/inputs/ega/EGAD00001008215_metadata/samples.tsv"
+    }
+    all_phenotypes = "/home/direnc/inputs/ega/EGA_Phenotypes_1000IBD_release_2.txt"
+    create_venn_patient_ids(datasets, all_phenotypes)
