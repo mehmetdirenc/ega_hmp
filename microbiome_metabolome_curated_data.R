@@ -6,6 +6,7 @@ load_datasets <- function()
 {
   # source("/mnt/lustre/home/mager/magmu818/tools/microbiome-metabolome-curated-data/scripts/data_organization/utils.R")
   setwd('/home/direnc/tools/microbiome-metabolome-curated-data/scripts/')
+  # setwd("/mnt/lustre/home/mager/magmu818/tools/microbiome-metabolome-curated-data/scripts")
   source("data_organization/utils.R")
   source("data_analysis/hmdb_utils.R")
   options(scipen = 999)
@@ -30,8 +31,6 @@ generate_filtered_tables <- function (updated_dataset)
     df <- species_counts[[i]]
     ##get the keys of the list
     df_name <- names(species_counts)[i]
-    # Calculate the row sums of the original data frame (excluding the first column)
-    row_sums <- rowSums(df[,-1])
     # Filter the columns
     filtered_df <- df[, c(TRUE, grepl(cp, colnames(df)[-1], ignore.case = TRUE)
       | grepl(hm, colnames(df)[-1], ignore.case = TRUE))]
@@ -47,8 +46,14 @@ generate_filtered_tables <- function (updated_dataset)
       percentage_col_name <- paste0(col_name, "_percentage")
       filtered_df[[percentage_col_name]] <- (filtered_df[[col_name]] / rowSums(df[,-1])) * 100
     }
+    if (df_name == "FRANZOSA_IBD_2019")
+    {
+      filtered_df$Sample <- updated_dataset$metadata[[df_name]]$Study.Group
+    }
     filtered_tables_list[[df_name]] <- filtered_df
   }
+  filtered_tables_list$specific_metadata <- updated_dataset$specific_metadata
+  return(filtered_tables_list)
 }
 
 generate_dataset_metadata <- function (original_dataset)
@@ -109,7 +114,7 @@ main <- function ()
 {
   original_dataset <- load_datasets()
   updated_dataset <- generate_dataset_metadata(original_dataset)
-  generate_filtered_tables(updated_dataset)
+  filtered_tables <- generate_filtered_tables(updated_dataset)
 }
 
 main()
