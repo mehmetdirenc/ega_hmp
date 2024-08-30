@@ -71,19 +71,40 @@ def create_venn_patient_ids(datasets, all_phenotypes):
     return all_collections
 
 
+def create_nfcore_rnaseq_sheet(samples_tsv_path, dataset_folder_path, samplesheet_path):
+    sample_to_reads_dict = reads_to_samples(dataset_folder_path)
+    sample_to_patient_dict = create_sample_to_patient_dict(samples_tsv_path)
+    new_sample_to_patient_dict = {}
+    with open(samplesheet_path, "w") as f:
+        f.write("sample,fastq_1,fastq_2,strandedness\n")
+        for sample in sample_to_reads_dict:
+
+            f.write(",".join([sample, sample_to_reads_dict[sample][0], sample_to_reads_dict[sample][1], "auto\n"]))
+            # if sample_to_patient_dict[sample] in new_sample_to_patient_dict:
+            #     print(sample_to_patient_dict[sample])
+            # new_sample_to_patient_dict[sample_to_patient_dict[sample]] = sample_to_reads_dict[sample]
+    return
+
 
 if __name__ == '__main__':
+    samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001008214/metadata/samples.tsv"
+    dataset_folder_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001008214/"
+    samplesheet_path = "/mnt/lustre/projects/mager-1000ibd/input/ega/rnaseq/EGAD00001008214/samplesheet.csv"
+    create_nfcore_rnaseq_sheet(samples_tsv_path, dataset_folder_path, samplesheet_path)
+    print("DONE")
+    # samplesheet_path = ""
+    # create_nfcore_rnaseq_sheet(out_file_path)
     # dataset_folder_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001004194/"
     # patients_metadata_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001003991/EGAF00002487099/EGA_Phenotypes_1000IBD_release_2.txt"
     # samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001004194/metadata/samples.tsv"
     # create_sample_to_patient_dict(samples_tsv_path)
     # reads_to_samples(dataset_folder_path)
-    datasets =\
-    {
-        "16s_int_bio" : "/home/direnc/inputs/ega/EGAD00001003936_metadata/samples.tsv",
-        "metagenomics_feces" : "/home/direnc/inputs/ega/EGAD00001004194_metadata/samples.tsv",
-        "RNA_muc_bio" : "/home/direnc/inputs/ega/EGAD00001008214_metadata/samples.tsv",
-        "16s_muc_bio" : "/home/direnc/inputs/ega/EGAD00001008215_metadata/samples.tsv"
-    }
-    all_phenotypes = "/home/direnc/inputs/ega/EGA_Phenotypes_1000IBD_release_2.txt"
-    create_venn_patient_ids(datasets, all_phenotypes)
+    # datasets =\
+    # {
+    #     "16s_int_bio" : "/home/direnc/inputs/ega/EGAD00001003936_metadata/samples.tsv",
+    #     "metagenomics_feces" : "/home/direnc/inputs/ega/EGAD00001004194_metadata/samples.tsv",
+    #     "RNA_muc_bio" : "/home/direnc/inputs/ega/EGAD00001008214_metadata/samples.tsv",
+    #     "16s_muc_bio" : "/home/direnc/inputs/ega/EGAD00001008215_metadata/samples.tsv"
+    # }
+    # all_phenotypes = "/home/direnc/inputs/ega/EGA_Phenotypes_1000IBD_release_2.txt"
+    # create_venn_patient_ids(datasets, all_phenotypes)
