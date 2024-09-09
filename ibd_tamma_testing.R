@@ -62,9 +62,10 @@ cor_results <- data.frame(
   Gene = character(),
   Group = character(),
   Tissue = character(),
-  Correlation_Method = character(),
-  Correlation_Value = numeric(),
-  Correlation_p_value = numeric(),
+  Correlation_Value_spearman = numeric(),
+  p_Value_spearman = numeric(),
+  Correlation_Value_pearson = numeric(),
+  p_Value_pearson = numeric(),
   stringsAsFactors = FALSE
 )
 
@@ -80,36 +81,49 @@ for (gene in genes)
       cor_method <- tryCatch(
       {
         choose_correlation(filtered_df[[bc]], filtered_df[["TNF"]])
+        cor_test_p <- cor.test(filtered_df[[bc]], filtered_df[[gene]], method = "pearson")
+        cor_test_s <- cor.test(filtered_df[[bc]], filtered_df[[gene]], method = "spearman")
+        print(paste("Group:", selected_group, "Gene:", gene, ", Tissue:", selected_tissue, ", Correlation method:", cor_method, ", Correlation:", cor_val))
+
       },
       error = function(cond)
       {
         # message(paste("Group:", selected_group, ", Tissue:", selected_tissue))
         ""
       })
-      if (cor_method != "")
-      {
-        cor_test <- cor.test(filtered_df[[bc]], filtered_df[[gene]], method = cor_method)
-        print(paste("Group:", selected_group, "Gene:", gene, ", Tissue:", selected_tissue, ", Correlation method:", cor_method, ", Correlation:", cor_test$estimate))
-      }
-      else
-      {
-        next
-        # cor_test <- cor.test(filtered_df[[bc]], filtered_df[[gene]], method = "spearman")
-      }
-      cor_val <- cor_test$estimate
-      cor_p <- cor_test$p.value
+      # if (cor_method != "")
+      # {
+      # cor_val_p <- cor(filtered_df[[bc]], filtered_df[[gene]], method = "pearson")
+      # cor_val_s <- cor(filtered_df[[bc]], filtered_df[[gene]], method = "spearman")
+      # cor_test_p <- cor.test(filtered_df[[bc]], filtered_df[[gene]], method = "pearson")
+      # cor_test_s <- cor.test(filtered_df[[bc]], filtered_df[[gene]], method = "spearman")
+      # print(paste("Group:", selected_group, "Gene:", gene, ", Tissue:", selected_tissue, ", Correlation method:", cor_method, ", Correlation:", cor_val))
+      # # }
+      # else
+      # {
+      #   cor_val <- cor(filtered_df[[bc]], filtered_df[[gene]], method = "pearson")
+      #   # cor_test <- cor.test(filtered_df[[bc]], filtered_df[[gene]], method = "pearson")
+      # }
+      correlation_value_p <- cor_test_p$estimate
+      p_value_p <- cor_test_p$p.value
+      correlation_value_s <- cor_test_s$estimate
+      p_value_s <- cor_test_s$p.value
       cor_results <- rbind(cor_results, data.frame(
         Gene = gene,
         Group = selected_group,
         Tissue = selected_tissue,
-        Correlation_Method = ifelse(cor_method != "", cor_method, "pearson"),
-        Correlation_Value = cor_val,
-        Correlation_p_value = cor_p,
+        # Correlation_Method = ifelse(cor_method != "", cor_method, "pearson"),
+        Correlation_Value_spearman = correlation_value_s,
+        p_Value_spearman = p_value_s,
+        Correlation_Value_pearson = correlation_value_p,
+        p_Value_pearson = p_value_p,
         stringsAsFactors = FALSE
       ))
     }
   }
 }
+
+# Filter the data for rows where Tissue is "Colon" and group is "CD"
 # filtered_data <- combined_data %>%
 #   filter(tissue == "Colon" & group == "CD" & !is.na(CP_counts) & !is.na(TNF))
 #
@@ -121,6 +135,7 @@ for (gene in genes)
 #        x = "CP_counts",
 #        y = "TNF Expression") +
 #   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 # Generate dot plot for each gene
 for (gene in genes) {
   # Filter data for the current gene
@@ -141,3 +156,28 @@ for (gene in genes) {
   # Display the plot
   # print(p)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
