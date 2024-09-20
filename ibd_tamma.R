@@ -124,7 +124,8 @@ for (gene in genes)
 # Generate dot plot for each gene
 for (gene in genes) {
   # Filter data for the current gene
-  plot_data <- cor_results %>% dplyr::filter(Gene == gene)
+  plot_data_tmp <- cor_results %>% dplyr::filter(Gene == gene)
+  plot_data <- plot_data_tmp %>% dplyr::filter(Correlation_p_value <= 0.05)
 
   # Create the dot plot with custom y-axis ticks and colors
   p <- ggplot(plot_data, aes(x = Group, y = Correlation_Value, color = Tissue)) +

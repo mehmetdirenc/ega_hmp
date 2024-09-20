@@ -166,7 +166,7 @@ plots_path <- "/home/direnc/results/microbiome_metabolome_curated_data/"
 original_dataset <- load_datasets()
 updated_dataset <- generate_dataset_metadata(original_dataset)
 filtered_tables <- generate_filtered_tables(updated_dataset)
-generate_plots(filtered_tables, filtered_tables$specific_metadata, plots_path)
+# generate_plots(filtered_tables, filtered_tables$specific_metadata, plots_path)
 # }
 
 # main()

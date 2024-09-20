@@ -52,11 +52,20 @@ def create_venn_patient_ids(datasets, all_phenotypes):
     res_filepath = os.path.join(os.path.dirname(all_phenotypes), "venn.png")
     ds_dict_set = {}
     genes = []
+    test = []
     # ds_frame = pd.read_csv(all_phenotypes, sep="\t")
     for dataset in datasets:
         ds_path = datasets[dataset]
         ds_frame = pd.read_csv(ds_path, sep="\t")
+        # if dataset == "RNA_muc_bio":
+        #     subjects = ds_frame["subject_id"]
+        #     for i in subjects:
+        #         if i not in test:
+        #             test.append(i)
+        # print(dataset)
+        # print(len(test))
         ds_dict_set[dataset] = set(ds_frame["subject_id"])
+        print(dataset, len(ds_dict_set[dataset]))
     # exp_dict = dict(sorted(exp_dict.items()))
     # for gene in exp_dict:
     #     exp_dict_set[gene] = set(exp_dict[gene])
@@ -66,6 +75,7 @@ def create_venn_patient_ids(datasets, all_phenotypes):
     fig, ax = venn4(labels, names=list(ds_dict_set.keys()))
     fig = fig.tight_layout()
     # plt.show()
+    ax.title.set_text("Shared Patient Counts")
     plt.savefig(res_filepath)
     plt.close()
     return all_collections
@@ -87,11 +97,11 @@ def create_nfcore_rnaseq_sheet(samples_tsv_path, dataset_folder_path, sampleshee
 
 
 if __name__ == '__main__':
-    samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001008214/metadata/samples.tsv"
-    dataset_folder_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001008214/"
-    samplesheet_path = "/mnt/lustre/projects/mager-1000ibd/input/ega/rnaseq/EGAD00001008214/samplesheet.csv"
-    create_nfcore_rnaseq_sheet(samples_tsv_path, dataset_folder_path, samplesheet_path)
-    print("DONE")
+    # samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001008214/metadata/samples.tsv"
+    # dataset_folder_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001008214/"
+    # samplesheet_path = "/mnt/lustre/projects/mager-1000ibd/input/ega/rnaseq/EGAD00001008214/samplesheet.csv"
+    # create_nfcore_rnaseq_sheet(samples_tsv_path, dataset_folder_path, samplesheet_path)
+    # print("DONE")
     # samplesheet_path = ""
     # create_nfcore_rnaseq_sheet(out_file_path)
     # dataset_folder_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001004194/"
@@ -99,12 +109,12 @@ if __name__ == '__main__':
     # samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001004194/metadata/samples.tsv"
     # create_sample_to_patient_dict(samples_tsv_path)
     # reads_to_samples(dataset_folder_path)
-    # datasets =\
-    # {
-    #     "16s_int_bio" : "/home/direnc/inputs/ega/EGAD00001003936_metadata/samples.tsv",
-    #     "metagenomics_feces" : "/home/direnc/inputs/ega/EGAD00001004194_metadata/samples.tsv",
-    #     "RNA_muc_bio" : "/home/direnc/inputs/ega/EGAD00001008214_metadata/samples.tsv",
-    #     "16s_muc_bio" : "/home/direnc/inputs/ega/EGAD00001008215_metadata/samples.tsv"
-    # }
-    # all_phenotypes = "/home/direnc/inputs/ega/EGA_Phenotypes_1000IBD_release_2.txt"
-    # create_venn_patient_ids(datasets, all_phenotypes)
+    datasets =\
+    {
+        "16s_int_bio" : "/home/direnc/inputs/ega/EGAD00001003936_metadata/samples.tsv",
+        "metagenomics_feces" : "/home/direnc/inputs/ega/EGAD00001004194_metadata/samples.tsv",
+        "RNA_muc_bio" : "/home/direnc/inputs/ega/EGAD00001008214_metadata/samples.tsv",
+        "16s_muc_bio" : "/home/direnc/inputs/ega/EGAD00001008215_metadata/samples.tsv"
+    }
+    all_phenotypes = "/home/direnc/inputs/ega/EGA_Phenotypes_1000IBD_release_2.txt"
+    create_venn_patient_ids(datasets, all_phenotypes)
