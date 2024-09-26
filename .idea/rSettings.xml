@@ -3,5 +3,6 @@
   <component name="RSettings">
     <option name="interpreterPath" value="$USER_HOME$/miniconda3/envs/qiime2/bin/R" />
     <option name="remoteBasePath" value="/mnt/lustre/home/mager/magmu818" />
+    <option name="rstudioApiEnabled" value="false" />
   </component>
 </project>

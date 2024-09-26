@@ -41,7 +41,7 @@ def write_summary(results_folder, samples_tsv_path, patients_metadata_path, summ
                            "\tbarcode9_HM read count\tbarcode9_HM percentage\tBacillus pacificus read count\tBacillus pacificus percentage\tClostridium perfringens read count"
                            "\tClostridium perfringens percentage\tHathewaya massiliensis read count\tHathewaya massiliensis percentage\t%s"%header)
         for egan_result in results:
-            kraken_report = os.path.join(results_folder, egan_result, "kraken", "kraken_out.kreport")
+            kraken_report = os.path.join(results_folder, egan_result, "kraken", "kraken_out_final_2.kreport")
             tax_to_attributes = parse_kraken_report(kraken_report)
             summary_file.write(egan_result + "\t")
             summary_file.write("\t".join([tax_to_attributes["9999997"]["assigned_reads"], tax_to_attributes["9999997"]["percentage"],
@@ -278,14 +278,14 @@ def scatter_plot_16s(df, min_read_threshold, min_percentage_threshold, summary_r
 
 if __name__ == '__main__':
     results_folder = "/mnt/lustre/projects/mager-1000ibd/results/ega/metagenomics/EGAD00001004194"
-    summary_result_file = "/mnt/lustre/projects/mager-1000ibd/results/ega/summaries/metagenomics/EGAD00001004194/EGAD00001004194_summary_sr_corrected.tsv"
+    summary_result_file = "/mnt/lustre/projects/mager-1000ibd/results/ega/summaries/metagenomics/EGAD00001004194/EGAD00001004194_summary_final.tsv"
     samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001004194/metadata/samples.tsv"
     # samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001008215/metadata/samples.tsv"
     patients_metadata_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001003991/EGAF00002487099/EGA_Phenotypes_1000IBD_release_2.txt"
     # patient_phenotype_dict, header = create_patient_phenotype_dict(patients_metadata_path)
     # sample_to_patient_dict = create_sample_to_patient_dict(samples_tsv_path)
     # create_sample_to_patient_dict(samples_tsv_path)
-    # write_summary(results_folder, samples_tsv_path, patients_metadata_path, summary_result_file)
+    write_summary(results_folder, samples_tsv_path, patients_metadata_path, summary_result_file)
     # abundance_table = "/mnt/lustre/projects/mager-1000ibd/results/ega/16s/EGAD00001008215/qiime/all_results/exported_abundance_table/metadata.tsv"
     # tax_tsv = "/mnt/lustre/projects/mager-1000ibd/results/ega/16s/EGAD00001008215/qiime/all_results/exported_taxonomy/taxonomy.tsv"
     # abundance_boi(abundance_table, tax_tsv)

@@ -35,28 +35,21 @@ def write_slurm_job(slurm_main_folder, result_folder, read1_path, read2_path, sa
     (
         "mkdir %s\n"
         "conda activate /mnt/lustre/groups/mager/magmu818/.conda/envs/kraken2\n"
-        "kraken2 --db /mnt/lustre/home/mager/magmu818/datasets/public_databases/kraken/bacteria --use-names --paired "
-        "--report %s/kraken_out.kreport --threads 63 "
-        "--output %s/kraken_out "
+        "kraken2 --db /mnt/lustre/home/mager/magmu818/datasets/public_databases/kraken/kraken2-standard --use-names --paired "
+        "--report %s/kraken_out_final_2.kreport --threads 63 "
+        "--output %s/kraken_out_final_2 "
         "%s "
         "%s"
-        "\n"%(kraken_result_folder, kraken_result_folder, kraken_result_folder, kneaddata_read_1_path, kneaddata_read_2_path)
-        +
-        "kraken2 --db /mnt/lustre/home/mager/magmu818/datasets/public_databases/kraken/bacteria --confidence 0.5 --use-names --paired "
-        "--report %s/unfiltered_kraken_out.kreport --threads 63 "
-        "--output %s/unfiltered_kraken_out "
-        "%s "
-        "%s"
-        "\n\n\n"%(kraken_result_folder, kraken_result_folder, unfiltered_kneaddata_read_1_path, unfiltered_kneaddata_read_2_path)
+        "\n\n\n"%(kraken_result_folder, kraken_result_folder, kraken_result_folder, kneaddata_read_1_path, kneaddata_read_2_path)
     )
 
     body_bracken = \
     (
         "conda activate /mnt/lustre/groups/mager/magmu818/.conda/envs/kraken2\n"
         "/mnt/lustre/home/mager/magmu818/bracken/bracken "
-        "-d /mnt/lustre/home/mager/magmu818/datasets/public_databases/kraken/bacteria "
-        "-i %s/kraken_out.kreport -t 50 "
-        "-o %s/bracken_out"%(kraken_result_folder, kraken_result_folder)
+        "-d /mnt/lustre/home/mager/magmu818/datasets/public_databases/kraken/kraken2-standard "
+        "-i %s/kraken_out_final_2.kreport -t 50 "
+        "-o %s/bracken_out_final"%(kraken_result_folder, kraken_result_folder)
     )
 
 
