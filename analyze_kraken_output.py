@@ -1,8 +1,10 @@
 import os, sys, time
+from lib2to3.fixes.fix_input import context
+
 from parse_metadata import *
 from qiime2_helpers import *
 
-
+import traceback
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -16,6 +18,12 @@ def parse_kraken_report(kreport_filepath):
     for tax in tax_of_interest:
         tax_to_attributes[tax] = {"assigned_reads": "0", "percentage" : "0"}
 
+    # tax_to_attributes["2026187"]["assigned_reads"], tax_to_attributes["2026187"]["percentage"],
+    # tax_to_attributes["1502"]["assigned_reads"], tax_to_attributes["1502"]["percentage"],
+    # tax_to_attributes["1964382"]["assigned_reads"], tax_to_attributes["1964382"]["percentage"]]))
+    # if "EGAN00001762115" not in kreport_filepath:
+    #     return tax_to_attributes
+    #     print("asd")
     with open(kreport_filepath) as kf:
         for line in kf:
             # lower_line = line.lower()
@@ -30,6 +38,13 @@ def parse_kraken_report(kreport_filepath):
                 total_fragments_assigned = split_line[1]
                 tax_to_attributes[taxid]["assigned_reads"] = total_fragments_assigned
                 tax_to_attributes[taxid]["percentage"] = str(float(total_fragments_assigned) / float(bacterial_reads) * 100)
+    tax_to_attributes["2026187"]["assigned_reads"] = str(float(tax_to_attributes["2026187"]["assigned_reads"]) + float(tax_to_attributes["9999997"]["assigned_reads"]))
+    tax_to_attributes["1502"]["assigned_reads"] = str(float(tax_to_attributes["1502"]["assigned_reads"]) + float(tax_to_attributes["9999998"]["assigned_reads"]))
+    tax_to_attributes["1964382"]["assigned_reads"] = str(float(tax_to_attributes["1964382"]["assigned_reads"]) + float(tax_to_attributes["9999999"]["assigned_reads"]))
+    for taxid in tax_to_attributes:
+        if taxid not in tax_of_interest:
+            continue
+        tax_to_attributes[taxid]["percentage"] = str(float(tax_to_attributes[taxid]["assigned_reads"]) / float(bacterial_reads) * 100)
     return tax_to_attributes
 
 def write_summary(results_folder, samples_tsv_path, patients_metadata_path, summary_result_file):
@@ -66,12 +81,21 @@ def analyze_summary16s(summary_result_file, min_read_threshold, min_percentage_t
     return
 
 def all_ibd_plot(df, min_read_threshold, min_percentage_threshold, bacterial_reads, sub_plt_path, sub_plt_path_log, sub_plt_path_violin, sub_plt_path_log_violin):
-    if "read count" in bacterial_reads or "sum" in bacterial_reads:
+    if "read count" in bacterial_reads or "sum" in bacterial_reads and "percentage" not in bacterial_reads:
         new_df = df.loc[df[bacterial_reads].ge(min_read_threshold)]
     else:
         new_df = df.loc[df[bacterial_reads].ge(min_percentage_threshold)]
+
+    # new_labels = [f'{category}\nn={new_df[new_df[condition] == category].shape[0]}' for category in x_u_list]
+    categories = new_df['diagnosis_last_record'].unique()
+    # new_labels = [f'{category}\nn={new_df[new_df["diagnosis_last_record"] == category].shape[0]}' for category in categories]
+
+    new_labels = [(f'{category}\nn={new_df[new_df["diagnosis_last_record"] == category].shape[0]}\n'
+                   f'(total={df[df["diagnosis_last_record"] == category].shape[0]})') for category in categories]
+
     fig, ax = plt.subplots()
-    sns.violinplot(data=new_df, x='diagnosis_last_record', y=bacterial_reads, ax=ax)
+    sns.violinplot(data=new_df, x='diagnosis_last_record', y=bacterial_reads, ax=ax, density_norm="count")
+    ax.set_xticklabels(new_labels)
     plt.savefig(sub_plt_path_violin, bbox_inches='tight')
     plt.close()
     fig, ax = plt.subplots()
@@ -81,7 +105,8 @@ def all_ibd_plot(df, min_read_threshold, min_percentage_threshold, bacterial_rea
     plt.close()
     fig, ax = plt.subplots()
     ax.set(yscale="log")
-    sns.violinplot(data=new_df, x='diagnosis_last_record', y=bacterial_reads, ax=ax)
+    sns.violinplot(data=new_df, x='diagnosis_last_record', y=bacterial_reads, ax=ax, density_norm="count")
+    ax.set_xticklabels(new_labels)
     plt.savefig(sub_plt_path_log_violin, bbox_inches='tight')
     plt.close()
     fig, ax = plt.subplots()
@@ -134,7 +159,7 @@ def scatter_plot(df, min_read_threshold, min_percentage_threshold, summary_resul
         else:
             fp = bacterial_reads.split()[0][0] + bacterial_reads.split()[1][0] + bacterial_reads.split()[2][0]
         sub_plt_path = os.path.join(result_folder, fp + "_" + "diseases" + ".png")
-        sub_plt_path_log = os.path.join(result_folder, fp + "_" + "diseases_log" + ".png")
+        sub_plt_path_log = os.path.join(result_folder_log, fp + "_" + "diseases_log" + ".png")
         sub_plt_path_violin = os.path.join(result_violin_folder, fp + "_" + "diseases" + ".png")
         sub_plt_path_log_violin = os.path.join(result_violin_folder_log, fp + "_" + "diseases_log" + ".png")
         all_ibd_plot(df, min_read_threshold, min_percentage_threshold, bacterial_reads, sub_plt_path, sub_plt_path_log, sub_plt_path_violin, sub_plt_path_log_violin)
@@ -168,14 +193,24 @@ def scatter_plot(df, min_read_threshold, min_percentage_threshold, summary_resul
                     continue
                 x_u_list.sort()
                 fig, ax = plt.subplots()
+                # print(x_u_list)
+                # print(df.columns)
+                # print(new_df.columns)
                 ax.set(yscale="log")
+                # new_labels = [f'{category}\nn={new_df[new_df[condition] == category].shape[0]}' for category in x_u_list]
+                new_labels = [(f'{category}\nn={new_df[new_df[condition] == category].shape[0]}\n'
+                               f'(total={df[df[condition] == category].shape[0]})') for category in
+                              x_u_list]
+
                 sns.boxplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax).set_title(diagnosis)
                 sns.stripplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax, color="red", s=5).set_title(diagnosis)
                 plt.savefig(plt_path_log, bbox_inches='tight')
                 plt.close()
                 fig, ax = plt.subplots()
                 ax.set(yscale="log")
-                sns.violinplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax).set_title(diagnosis)
+                sns.violinplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax, density_norm="count").set_title(diagnosis)
+                ax.set_xticklabels(new_labels)
+                # plt.show()
                 plt.savefig(plt_path_log_violin, bbox_inches='tight')
                 plt.close()
                 fig, ax = plt.subplots()
@@ -184,7 +219,8 @@ def scatter_plot(df, min_read_threshold, min_percentage_threshold, summary_resul
                 plt.savefig(plt_path, bbox_inches='tight')
                 plt.close()
                 fig, ax = plt.subplots()
-                sns.violinplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax).set_title(diagnosis)
+                sns.violinplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax, density_norm="count").set_title(diagnosis)
+                ax.set_xticklabels(new_labels)
                 plt.savefig(plt_path_violin, bbox_inches='tight')
                 # plt.clf()
                 # plt.cla()
@@ -219,20 +255,26 @@ def scatter_plot_16s(df, min_read_threshold, min_percentage_threshold, summary_r
     header = list(df)
     # diagnosis_list = list(map(str, df['diagnosis_last_record'].unique().tolist()))
     diagnosis_list = df['diagnosis_last_record'].unique()
-    for fp in header[1:3]:
+    for fp in header[2:6]:
         sub_plt_path = os.path.join(result_folder, fp + "_" + "diseases" + ".png")
         sub_plt_path_log = os.path.join(result_folder, fp + "_" + "diseases_log" + ".png")
         sub_plt_path_violin = os.path.join(result_violin_folder, fp + "_" + "diseases" + ".png")
         sub_plt_path_log_violin = os.path.join(result_violin_folder_log, fp + "_" + "diseases_log" + ".png")
         bacterial_reads = fp
-        all_ibd_plot(df, min_read_threshold, "", bacterial_reads, sub_plt_path, sub_plt_path_log, sub_plt_path_violin, sub_plt_path_log_violin)
+        all_ibd_plot(df, min_read_threshold, min_percentage_threshold, bacterial_reads, sub_plt_path, sub_plt_path_log, sub_plt_path_violin, sub_plt_path_log_violin)
         for diagnosis in diagnosis_list:
-            for condition in [header[13], header[14], header[15], header[16], header[17], header[10]]:
+            # conditions_header = [header[13], header[14], header[15], header[16], header[17], header[10]]
+            conditions_header = [header[16], header[17], header[18], header[19], header[20], header[13]]
+            for condition in conditions_header:
                 plt_path = os.path.join(result_folder, fp + "_" + str(diagnosis) + "_" + condition.replace(" ", "_")) + ".png"
                 plt_path_log = os.path.join(result_folder_log, fp + "_" + str(diagnosis) + "_" + condition.replace(" ", "_")) + ".png"
                 plt_path_violin = os.path.join(result_violin_folder, fp + "_" + str(diagnosis) + "_" + condition.replace(" ", "_")) + ".png"
                 plt_path_log_violin = os.path.join(result_violin_folder_log, fp + "_" + str(diagnosis) + "_" + condition.replace(" ", "_")) + ".png"
-                new_df = df.loc[df['diagnosis_last_record'].eq(diagnosis) & df[fp].ge(min_read_threshold)]
+                # new_df = df.loc[df['diagnosis_last_record'].eq(diagnosis) & df[fp].ge(min_read_threshold)]
+                if "read count" in bacterial_reads or "sum" in bacterial_reads:
+                    new_df = df.loc[df['diagnosis_last_record'].eq(diagnosis) & df[fp].ge(min_read_threshold)]
+                else:
+                    new_df = df.loc[df['diagnosis_last_record'].eq(diagnosis) & df[fp].ge(min_percentage_threshold)]
                 x_u_list = list(map(str, new_df[condition].unique().tolist()))
                 # x_u_list = new_df[condition].unique().tolist()
                 if "nan" in x_u_list:
@@ -245,9 +287,15 @@ def scatter_plot_16s(df, min_read_threshold, min_percentage_threshold, summary_r
                 fig, ax = plt.subplots()
                 ax.set(yscale="log")
                 try:
+                    # new_labels = [f'{category}\nn={new_df[new_df[condition] == category].shape[0]}' for category in x_u_list]
+
+                    new_labels = [(f'{category}\nn={new_df[new_df[condition] == category].shape[0]}\n'
+                                   f'(total={df[df[condition] == category].shape[0]})') for category in
+                                  x_u_list]
                     fig, ax = plt.subplots()
                     ax.set(yscale="log")
-                    sns.violinplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax).set_title(diagnosis)
+                    sns.violinplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax, density_norm="count").set_title(diagnosis)
+                    ax.set_xticklabels(new_labels)
                     plt.savefig(plt_path_log_violin, bbox_inches='tight')
                     plt.close()
                     fig, ax = plt.subplots()
@@ -256,12 +304,20 @@ def scatter_plot_16s(df, min_read_threshold, min_percentage_threshold, summary_r
                     sns.stripplot(data=new_df, x=condition, y=fp, order=x_u_list, ax=ax, color="red", s=5).set_title(diagnosis)
                     plt.savefig(plt_path_log, bbox_inches='tight')
                     plt.close()
-                except:
-                    print("ignore NA issue")
+                except Exception as e:
+                    traceback.print_exc()
+                    print(e)
+                    # print("ignore NA issue")
                     continue
                 try:
                     fig, ax = plt.subplots()
-                    sns.violinplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax).set_title(diagnosis)
+                    # new_labels = [f'{category}\nn={new_df[new_df[condition] == category].shape[0]}' for category in x_u_list]
+
+                    new_labels = [(f'{category}\nn={new_df[new_df[condition] == category].shape[0]}\n'
+                                   f'(total={df[df[condition] == category].shape[0]})') for category in
+                                  x_u_list]
+                    sns.violinplot(data=new_df, x=condition, y=bacterial_reads, order=x_u_list, ax=ax, density_norm="count").set_title(diagnosis)
+                    ax.set_xticklabels(new_labels)
                     plt.savefig(plt_path_violin, bbox_inches='tight')
                     plt.close()
                     fig, ax = plt.subplots()
@@ -269,8 +325,10 @@ def scatter_plot_16s(df, min_read_threshold, min_percentage_threshold, summary_r
                     sns.stripplot(data=new_df, x=condition, y=fp, order=x_u_list, ax=ax, color="red", s=5).set_title(diagnosis)
                     plt.savefig(plt_path, bbox_inches='tight')
                     plt.close()
-                except:
-                    print("ignore NA issue")
+                except Exception as e:
+                    traceback.print_exc()
+                    print(e)
+                    # print("ignore NA issue")
                     continue
 
 # def generate_bacteria_to_ibd_plots():
@@ -279,23 +337,25 @@ def scatter_plot_16s(df, min_read_threshold, min_percentage_threshold, summary_r
 if __name__ == '__main__':
     results_folder = "/mnt/lustre/projects/mager-1000ibd/results/ega/metagenomics/EGAD00001004194"
     summary_result_file = "/mnt/lustre/projects/mager-1000ibd/results/ega/summaries/metagenomics/EGAD00001004194/EGAD00001004194_summary_final.tsv"
+    summary_result_file = "/home/direnc/results/ega/metagenomics/EGAD00001004194/all_results_local/EGAD00001004194_summary_final.tsv"
     samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001004194/metadata/samples.tsv"
     # samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001008215/metadata/samples.tsv"
     patients_metadata_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001003991/EGAF00002487099/EGA_Phenotypes_1000IBD_release_2.txt"
     # patient_phenotype_dict, header = create_patient_phenotype_dict(patients_metadata_path)
     # sample_to_patient_dict = create_sample_to_patient_dict(samples_tsv_path)
     # create_sample_to_patient_dict(samples_tsv_path)
-    write_summary(results_folder, samples_tsv_path, patients_metadata_path, summary_result_file)
+    # write_summary(results_folder, samples_tsv_path, patients_metadata_path, summary_result_file)
     # abundance_table = "/mnt/lustre/projects/mager-1000ibd/results/ega/16s/EGAD00001008215/qiime/all_results/exported_abundance_table/metadata.tsv"
     # tax_tsv = "/mnt/lustre/projects/mager-1000ibd/results/ega/16s/EGAD00001008215/qiime/all_results/exported_taxonomy/taxonomy.tsv"
     # abundance_boi(abundance_table, tax_tsv)
-    min_read_threshold = 100
-    min_percentage_threshold = 0.001
-    analyze_summary(summary_result_file, min_read_threshold, min_percentage_threshold)
-    min_read_threshold = 0
-    min_percentage_threshold = 0
-    analyze_summary(summary_result_file, min_read_threshold, min_percentage_threshold)
-    # boi_result_summary_file = "/mnt/lustre/projects/mager-1000ibd/results/ega/summaries/16s/EGAD00001008215/summary_result.tsv"
+    # min_read_threshold = 100
+    # min_percentage_threshold = 0.001
+    # analyze_summary(summary_result_file, min_read_threshold, min_percentage_threshold)
+    # min_read_threshold = 0
+    # min_percentage_threshold = 0
+    # analyze_summary(summary_result_file, min_read_threshold, min_percentage_threshold)
+
+    boi_result_summary_file = "/home/direnc/results/ega/16s/EGAD00001008215/all_results/summary_result_with_percentages.tsv"
     # min_read_threshold = 100
     # min_percentage_threshold = 0.001
     # analyze_summary16s(boi_result_summary_file, min_read_threshold, min_percentage_threshold)

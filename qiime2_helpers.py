@@ -78,8 +78,26 @@ def abundance_boi(qzv_table_metadata_file, tax_tsv, patients_metadata_path, samp
     abundance_df = abundance_df.apply(pd.to_numeric, errors='coerce').fillna(abundance_df)
     abundance_df['patient_read_sum'] = abundance_df.sum(axis=1, numeric_only=True)
     feature_id_taxa_dict['patient_read_sum'] = 'patient_read_sum'
+    selected_features = ["patient_read_sum", "g__Sarcina", "g__Hathewaya", "g__Bacillus",
+                         "vulgatus", "gnavus", "fragilis", "prausnitzii_I", "uniformis",
+                         "Duodenibacillus massiliensis", "Prevotella copri", "bifidum",
+                         "Mediterraneibacter lactaris", "Fusicatenibacter saccharivorans", "Hungatella effluvii"]
     for feature in feature_id_taxa_dict:
-        if "patient_read_sum" in feature_id_taxa_dict[feature] or "g__Sarcina" in feature_id_taxa_dict[feature] or "g__Hathewaya" in feature_id_taxa_dict[feature] or  "g__Bacillus" in feature_id_taxa_dict[feature]:
+        select = False
+        for sf in selected_features:
+            if sf in feature_id_taxa_dict[feature]:
+                select = True
+        if not select:
+            continue
+        # if ("patient_read_sum" in feature_id_taxa_dict[feature] or
+        #         "g__Sarcina" in feature_id_taxa_dict[feature] or
+        #         "g__Hathewaya" in feature_id_taxa_dict[feature] or
+        #         "g__Bacillus" in feature_id_taxa_dict[feature] or
+        #         "vulgatus" in feature_id_taxa_dict[feature] or
+        #         "gnavus" in feature_id_taxa_dict[feature] or
+        #         "fragilis" in feature_id_taxa_dict[feature] or
+        #         "Duodenibacillus massiliensis" in feature_id_taxa_dict[feature]):
+        else:
             boi_features[feature] = feature_id_taxa_dict[feature]
             boi_features_only_final[feature] = feature_id_taxa_dict[feature].split(";")[-1]
     df_boi = abundance_df[itertools.chain(["id"], list(boi_features.keys()))]
@@ -99,6 +117,27 @@ def abundance_boi(qzv_table_metadata_file, tax_tsv, patients_metadata_path, samp
     df2_filtered["perfringens_sum_percentage"] = (df2_filtered['perfringens_sum']/df2_filtered['patient_read_sum']).mul(100)
     df2_filtered["hathewaya_sum"] = df2_filtered.filter(like="Hathewaya").sum(axis=1)
     df2_filtered["hathewaya_sum_percentage"] = (df2_filtered['hathewaya_sum']/df2_filtered['patient_read_sum']).mul(100)
+    df2_filtered["pacificus_sum"] = df2_filtered.filter(like="Pacificus").sum(axis=1)
+    df2_filtered["pacificus_sum_percentage"] = (df2_filtered['pacificus_sum']/df2_filtered['patient_read_sum']).mul(100)
+    df2_filtered["Duodenibacillus_sum"] = df2_filtered.filter(like="Duodenibacillus massiliensis").sum(axis=1)
+    df2_filtered["Duodenibacillus_sum_percentage"] = (df2_filtered['Duodenibacillus_sum']/df2_filtered['patient_read_sum']).mul(100)
+    # Mediterraneibacter lactaris sometimes pro sometimes anti
+    # Fusicatenibacter saccharivorans should be anti
+    # Hungatella effluvii
+    selected_orgs = ["vulgatus", "gnavus", "fragilis", "prausnitzii_I", "uniformis", "bifidum", "Prevotella copri",
+                     "Mediterraneibacter lactaris", "Fusicatenibacter saccharivorans", "Hungatella effluvii"]
+    for so in selected_orgs:
+        df2_filtered[f"{so}_sum"] = df2_filtered.filter(like=so).sum(axis=1)
+        df2_filtered[f"{so}_sum_percentage"] = (df2_filtered[f'{so}_sum']/df2_filtered['patient_read_sum']).mul(100)
+    # df2_filtered["vulgatus_sum"] = df2_filtered.filter(like="vulgatus").sum(axis=1)
+    # df2_filtered["vulgatus_sum_percentage"] = (df2_filtered['vulgatus_sum']/df2_filtered['patient_read_sum']).mul(100)
+    # df2_filtered["fragilis_sum"] = df2_filtered.filter(like="fragilis").sum(axis=1)
+    # df2_filtered["fragilis_sum_percentage"] = (df2_filtered['fragilis_sum']/df2_filtered['patient_read_sum']).mul(100)
+    # "prausnitzii_I", "uniformis"
+    # df2_filtered["prausnitzii_I_sum"] = df2_filtered.filter(like="fragilis").sum(axis=1)
+    # df2_filtered["prausnitzii_I_sum_percentage"] = (df2_filtered['fragilis_sum']/df2_filtered['patient_read_sum']).mul(100)
+    # df2_filtered["fragilis_sum"] = df2_filtered.filter(like="fragilis").sum(axis=1)
+    # df2_filtered["fragilis_sum_percentage"] = (df2_filtered['fragilis_sum']/df2_filtered['patient_read_sum']).mul(100)
     df2_filtered.drop(list(df2_filtered.filter(regex='s__')), axis=1, inplace=True)
     merged = pd.merge(df2_filtered, metadata_df, on='id', how='left')
     merged_no_na = merged.dropna()
