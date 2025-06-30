@@ -176,8 +176,6 @@ def get_gene_aliases(human_gene_info):
 
 def get_correlation(gene_aliases, dlr_type, df_final, gene, ega_paper_cd_100, ega_paper_uc_100, tpm_threshold, organism):
     # for dlr_type in dlrs:
-    # if gene == "TNF" and dlr_type == "CD":
-    #     print("TNF")
     result_to_add = {"ega_coefficient" : [], "alias" : [], "trustworthy" : [], "gene" : [], "correlation_type" : [], 'dlr_type': [], 'correlation': [], 'p_value': []}
     ega_coefficient = "Na"
     trustworthy = "Yes"
@@ -189,7 +187,7 @@ def get_correlation(gene_aliases, dlr_type, df_final, gene, ega_paper_cd_100, eg
     alias = gene
     if gene not in all_columns:
         if gene not in gene_aliases:
-            # print(gene)
+            print(gene)
             return {"Na"}
         else:
             aliases = gene_aliases[gene]
@@ -280,7 +278,7 @@ def combine_rnaseq_metagenomics(rnaseq_final_res_path, meta_summary_results,
     #          "IL23", "IL10", "S100A8", "S100A9", "NOD2", "STAT3",
     #          "REG1A", "REG1B", "DUOXA2", "ANXA10", "MUC5AC", "DUOX2",
     #          "REG1B", "MMP3", "AQP8", "CLDN8", "CDHR1", "SLC38A4", "FMO1"]
-    # print(len(genes_dict))
+    print(len(genes_dict))
     for_scatter = {}
     all_results = {}
     # for cor_type in cor_types:
@@ -297,12 +295,8 @@ def combine_rnaseq_metagenomics(rnaseq_final_res_path, meta_summary_results,
         #                             "Bifidobacterium bifidum percentage" , "Faecalibacterium prausnitzii_I percentage",
         #                             "diagnosis_last_record"]], on='sample', how='inner')
         disease_counts_before = df_final['diagnosis_last_record'].value_counts()
-        # df_final_pre = extra_disease_check(rna_muc_samples_tsv_path, df_final)
-        # df_final_max = df_final_pre.loc[df_final_pre.groupby("sample")[organism].idxmax()]
-        # df_final[organism] = df_final_pre.groupby("sample")[organism].transform("mean")
-        # df_final = df_final.drop_duplicates(subset="sample")
-        # df_final = df_final.loc[df_final_pre.groupby("sample")[organism].idxmax()]
         df_final = extra_disease_check(rna_muc_samples_tsv_path, df_final)
+        df_final = df_final.loc[df_final.groupby("sample")[organism].idxmax()]
         disease_counts_after = df_final['diagnosis_last_record'].value_counts()
         for_scatter[exp] = df_final
         dlrs = df_final['diagnosis_last_record'].unique()
@@ -355,11 +349,8 @@ def combine_rnaseq_metagenomics(rnaseq_final_res_path, meta_summary_results,
 #                 entry[key] = ', '.join(map(str, value)) if isinstance(value, list) else str(value)
         df_results[exp] = pd.DataFrame(all_results[exp]).dropna()
         # try:
-        # df_results[exp]['adjusted_p_value_fdr_tsbh'] = multipletests(df_results[exp]['p_value'], method='fdr_tsbh')[1]
         df_results[exp]['adjusted_p_value'] = multipletests(df_results[exp]['p_value'], method='fdr_bh')[1]
-        # df_results[exp]['adjusted_p_value_bonferroni'] = multipletests(df_results[exp]['p_value'], method='bonferroni')[1]
-        # df_results[exp]['adjusted_p_value_holm-sidak'] = multipletests(df_results[exp]['p_value'], method='holm-sidak')[1]
-        # df_results[exp]['adjusted_p_value_simes-hochberg'] = multipletests(df_results[exp]['p_value'], method='simes-hochberg')[1]
+        # df_results[exp]['adjusted_p_value'] = multipletests(df_results[exp]['p_value'], method='bonferroni')[1]
         # except:
         #     print("PROBLEMATIC GENE")
         # df_results[exp]['adjusted_p_value_bf'] = multipletests(df_results[exp]['p_value'], method='bonferroni')[1]
@@ -404,7 +395,6 @@ def create_scatter_plots(chosen_genes, for_scatter, scatter_folder, threshold, e
         os.mkdir(scatter_folder)
     if not os.path.exists(scatter_res_folder):
         os.mkdir(scatter_res_folder)
-    print(scatter_res_folder)
     for exp in chosen_genes:
         cor_sum_file = os.path.join(scatter_res_folder, f"{ega_based}{exp}_{str(threshold)}_all_correlation_summary.tsv")
         df_x = chosen_genes[exp]
@@ -413,7 +403,6 @@ def create_scatter_plots(chosen_genes, for_scatter, scatter_folder, threshold, e
         try:
             df_y = for_scatter[exp]
         except:
-            print("scatter issue")
             print(exp)
         for _, row in df_x.iterrows():
             gene_name = row['gene']
@@ -424,8 +413,6 @@ def create_scatter_plots(chosen_genes, for_scatter, scatter_folder, threshold, e
             from scipy.stats import linregress
             if gene_name not in filtered_df_y:
                 gene_name = alias
-            corr_value = row["correlation"]
-
                 # x = filtered_df_y[alias]
             ## TO CHANGE ##
             # if gene_name not in ["TNF", "CRABP1"] :
@@ -453,8 +440,6 @@ def create_scatter_plots(chosen_genes, for_scatter, scatter_folder, threshold, e
             # if gene_name == "GPN1" and dlr_type == "CD" and exp == "muc_16s" and threshold == 0.001:
             #     print("asd")
             result_file = os.path.join(scatter_res_folder, f"{exp}_{dlr_type}_{gene_name}_{str(threshold)}.png")
-            # if gene_name == "TNF" or gene_name == "CRABP1":
-            #     print(result_file)
             # Create scatter plot
             plt.figure(figsize=(8, 6))
             plt.scatter(x, y, alpha=0.7)
@@ -464,11 +449,8 @@ def create_scatter_plots(chosen_genes, for_scatter, scatter_folder, threshold, e
             plt.xlabel(gene_name)
             plt.ylabel(organism)
             num_points = str(len(filtered_df_y))
-            plt.title(f"Scatter Plot for {gene_name} to {abbr} Abundance in {dlr_type} with tpm threshold: {tpm_threshold}, n = {num_points} (x y log10)")
+            plt.title(f"Scatter Plot for {gene_name} to {abbr} Abundance in {dlr_type} with {tpm_threshold}, n = {num_points} (x y log10)")
             # plt.grid(True)
-            # plt.show()
-            plt.text(0.1, 0.95, f"r = {corr_value:.2f}", transform=plt.gca().transAxes,
-                     fontsize=12, verticalalignment='top')
             # plt.show()
             plt.savefig(result_file)
             plt.close()
@@ -497,7 +479,6 @@ def create_correlation_plots(df_results, correlation_folder, threshold, ega_base
         os.mkdir(res_folder)
     # sns.set(style="whitegrid")
     chosen_genes ={}
-    print(res_folder)
     for exp in df_results:
         df = df_results[exp].drop_duplicates().reset_index(drop=True)
         for dlr in df['dlr_type'].unique():
@@ -526,111 +507,56 @@ def create_correlation_plots(df_results, correlation_folder, threshold, ega_base
             # if len(df_subset["correlation_type"].unique()) > 1:
             #     print("lNETSNDFOMKASDFAFG,LADFN")
             cor_type = df_subset["correlation_type"].unique()[0]
-            for selected_color in ['r', 'b']:
-                color_name = 'red' if selected_color == 'r' else 'blue'
-                filtered_df = df_subset[df_subset['color'] == selected_color].copy()
-
-                if filtered_df.empty:
-                    continue  # Skip if no data for this color
-
-                plt.figure(figsize=(13, 7))
-                min_size = filtered_df['dot_size'].min()
-                max_size = filtered_df['dot_size'].max()
-                median_size = filtered_df['dot_size'].median()
-
-                # palette={selected_color: color_name},
-                sns.scatterplot(data=filtered_df, x='gene', y='correlation',
-                                color='black',
-                                legend=False,
-                                size='dot_size',
-                                sizes=(min_size, max_size))
-
-                plt.scatter([], [], s=min_size, color='black', label=f"{min_size / size_scale:.2f}")
-                plt.scatter([], [], s=1, color='none', edgecolor='none', label=" ")
-                plt.scatter([], [], s=max_size, color='black', label=f"{max_size / size_scale:.2f}")
-                plt.ylim(-1, 1)
-
-                plt.legend(
-                    title=f"Abundance threshold:{str(threshold)}\n"
-                          f"TPM threshold: {str(tpm_threshold)}\nBeta-coefficient values \n(Original EGA dataset, t-test)",
-                    loc='center left',
-                    bbox_to_anchor=(1, 0.5),
-                    fontsize=10,
-                    title_fontsize=12,
-                    frameon=False
-                )
-                organism = organism.split()[0] + " " + organism.split()[1]
-                if organism == "Clostridium perfringens":
-                    organism = "Sarcina perfringens"
-                plt.title(f'Correlation of {organism} Abundance with Inflammation-Related Gene Expression in {dlr}', fontsize=16)
-                # plt.title(f'{ega_based} {dlr} {organism} ({color_name} only)', fontsize=16)
-                plt.xlabel('Gene', fontsize=12)
-                plt.ylabel('Correlation Value', fontsize=12)
-                plt.xticks(rotation=90)
-
-                for label in plt.gca().get_xticklabels():
-                    if label.get_text() in uc_genes_up:
-                        label.set_fontweight('bold')
-
-                file_suffix = f"{ega_based}_{exp}_{dlr}_{cor_type}_{color_name}only"
-                if threshold != 0:
-                    file_suffix += f"_{str(threshold)}"
-                result_file = os.path.join(res_folder, f"{file_suffix}.pdf")
-
-                plt.tight_layout()
-                # plt.show()
-                plt.savefig(result_file, format='pdf', dpi=600)
-                plt.close()
-            # Create the dot plot using seaborn COMMENTED OUT TO CREATE TWO PLOTS
-            # plt.figure(figsize=(13, 7))  # Adjust figure size
-            # min_size = df_subset['dot_size'].min()
-            # median_size = df_subset['dot_size'].median()
-            # max_size = df_subset['dot_size'].max()
+            # Create the dot plot using seaborn
+            plt.figure(figsize=(13, 7))  # Adjust figure size
+            min_size = df_subset['dot_size'].min()
+            median_size = df_subset['dot_size'].median()
+            max_size = df_subset['dot_size'].max()
+            sns.scatterplot(data=df_subset, x='gene', y='correlation',
+                            palette={'b': 'blue', 'r': 'red', "p" : "purple"},
+                            hue='color',
+                            legend=False,
+                            size='dot_size',
+                            sizes=(min_size, max_size),
+                            color=df_subset['color'])  # Use manual color assignment
             # sns.scatterplot(data=df_subset, x='gene', y='correlation',
-            #                 palette={'b': 'blue', 'r': 'red', "p" : "purple"},
-            #                 hue='color',
-            #                 legend=False,
-            #                 size='dot_size',
-            #                 sizes=(min_size, max_size),
-            #                 color=df_subset['color'])  # Use manual color assignment
-            # # sns.scatterplot(data=df_subset, x='gene', y='correlation',
-            # #                 hue='color', palette={'g': 'green', 'r': 'red'}, legend=False)
-            #
-            # # Add labels and title and result file
-            # # for size in [min_size, median_size, max_size]:
-            # plt.scatter([], [], s=min_size, color='black', label=f"{min_size / size_scale:.2f}")
-            # plt.scatter([], [], s=1, color='none', edgecolor='none', label=" ")
-            # plt.scatter([], [], s=max_size, color='black', label=f"{max_size / size_scale:.2f}")
-            # plt.ylim(-1, 1)
-            # # Place the legend outside the plot
-            # plt.legend(
-            #     title=f"Abundance threshold:{str(threshold)}\n"
-            #           f"TPM threshold: {str(tpm_threshold)}\nBeta-coefficient values \n(Original EGA dataset, t-test)",  # Legend title
-            #     loc='center left',  # Position on the right side
-            #     bbox_to_anchor=(1, 0.5),# Fine-tune the placement
-            #     fontsize=10,
-            #     title_fontsize=12,
-            #     frameon=False  # Add a frame around the legend
-            # )
-            # if threshold == 0:
-            #     result_file = os.path.join(res_folder, f"{ega_based}_{exp}_{dlr}_{cor_type}.pdf")
-            #     plt.title(f'{ega_based} {dlr} {organism}', fontsize=16)
-            # else:
-            #     result_file = os.path.join(res_folder, f"{ega_based}_{exp}_{dlr}_{cor_type}_{str(threshold)}.pdf")
-            #     plt.title(f'{ega_based} {dlr} {organism}', fontsize=16)
-            # plt.xlabel('Gene', fontsize=12)
-            # plt.ylabel('Correlation Value', fontsize=12)
-            #
-            # # Rotate gene labels if necessary for readability
-            # plt.xticks(rotation=90)
-            # for label in plt.gca().get_xticklabels():
-            #     if label.get_text() in uc_genes_up:
-            #         label.set_fontweight('bold')  # Make the label bold
-            # # Show the plot
-            # plt.tight_layout()
-            # # plt.show()
-            # plt.savefig(result_file, format='pdf', dpi=600)
-            # plt.close()
+            #                 hue='color', palette={'g': 'green', 'r': 'red'}, legend=False)
+
+            # Add labels and title and result file
+            # for size in [min_size, median_size, max_size]:
+            plt.scatter([], [], s=min_size, color='black', label=f"{min_size / size_scale:.2f}")
+            plt.scatter([], [], s=1, color='none', edgecolor='none', label=" ")
+            plt.scatter([], [], s=max_size, color='black', label=f"{max_size / size_scale:.2f}")
+            plt.ylim(-1, 1)
+            # Place the legend outside the plot
+            plt.legend(
+                title=f"Abundance threshold:{str(threshold)}\n"
+                      f"TPM threshold: {str(tpm_threshold)}\nBeta-coefficient values \n(Original EGA dataset, t-test)",  # Legend title
+                loc='center left',  # Position on the right side
+                bbox_to_anchor=(1, 0.5),# Fine-tune the placement
+                fontsize=10,
+                title_fontsize=12,
+                frameon=False  # Add a frame around the legend
+            )
+            if threshold == 0:
+                result_file = os.path.join(res_folder, f"{ega_based}_{exp}_{dlr}_{cor_type}.png")
+                plt.title(f'{ega_based} {dlr} {organism}', fontsize=16)
+            else:
+                result_file = os.path.join(res_folder, f"{ega_based}_{exp}_{dlr}_{cor_type}_{str(threshold)}.png")
+                plt.title(f'{ega_based} {dlr} {organism}', fontsize=16)
+            plt.xlabel('Gene', fontsize=12)
+            plt.ylabel('Correlation Value', fontsize=12)
+
+            # Rotate gene labels if necessary for readability
+            plt.xticks(rotation=90)
+            for label in plt.gca().get_xticklabels():
+                if label.get_text() in uc_genes_up:
+                    label.set_fontweight('bold')  # Make the label bold
+            # Show the plot
+            plt.tight_layout()
+            # plt.show()
+            plt.savefig(result_file)
+            plt.close()
     return chosen_genes
 
 def parse_attributes(attributes_str):
@@ -756,8 +682,6 @@ if __name__ == '__main__':
     patients_metadata_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001003991/EGAF00002487099/EGA_Phenotypes_1000IBD_release_2.txt"
     rna_muc_samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001008214/metadata/samples.tsv"
     rna_muc_sample_to_patient_dict = create_sample_to_patient_dict(rna_muc_samples_tsv_path)
-    # for i in rna_muc_sample_to_patient_dict:
-    #     print(i, rna_muc_sample_to_patient_dict[i])
     muc_16s_samples_tsv_path = "/mnt/lustre/projects/mager-1000ibd/datasets/EGAD00001008215/metadata/samples.tsv"
     muc_16s_sample_to_patient_dict = create_sample_to_patient_dict(muc_16s_samples_tsv_path)
     ####EGAD...3936 (int_16s_bio) has almost none of our bacteria of interest
@@ -773,18 +697,8 @@ if __name__ == '__main__':
     muc_16s_summary_results = "/mnt/lustre/projects/mager-1000ibd/results/ega/summaries/16s/EGAD00001008215/summary_result_with_percentages.tsv"
     # extract_gene_counts(rnaseq_results_folder, rnaseq_final_res_path)
     gtf_filepath = "/mnt/lustre/home/mager/magmu818/datasets/public_databases/human_genome/GCF_000001405.40_GRCh38.p14_genomic.gtf"
-    pickle_path = "/mnt/lustre/home/mager/magmu818/datasets/public_databases/human_genome/GCF_000001405.40_GRCh38.p14_genomic.pkl"
-    if os.path.exists(pickle_path):
-        with open(pickle_path, "rb") as f:
-            genes_dict = pickle.load(f)
-    else:
-        genes_dict = get_genes(gtf_filepath)
-        with open(pickle_path, "wb") as f:
-            pickle.dump(genes_dict, f)
-    # genes_dict = get_genes(gtf_filepath)
+    genes_dict = get_genes(gtf_filepath)
     human_gene_info = "/mnt/lustre/projects/mager-1000ibd/results/ega/human_gene_info.tsv"
-    # print(human_gene_info)
-    # sys.exit()
     # threshold = 0
     # combine_rnaseq_metagenomics(rnaseq_final_res_path, summary_results_meta,
     #                             correlation_folder, rna_muc_sample_to_patient_dict,
@@ -792,7 +706,7 @@ if __name__ == '__main__':
     #                             muc_16s_sample_to_patient_dict, muc_16s_summary_results,
     #                             threshold, genes_dict, scatter_folder, ega_paper_correlation ,human_gene_info)
     # tpm_thresholds = [0, 0.01, 0.1, 1]
-    tpm_thresholds = [0.01]
+    tpm_thresholds = [0.01, 0.1]
     # tpm_thresholds = [0.1]
     threshold = 0.001
     # correlation_folder = "/mnt/lustre/projects/mager-1000ibd/results/ega/correlation_plots_tpm_threshold_"
@@ -802,21 +716,17 @@ if __name__ == '__main__':
     #              'Phocaeicola vulgatus percentage': "PV"}
     # organisms = {'Phocaeicola vulgatus percentage': "PV", 'Duodenibacillus massiliensis percentage': "DM"}
     organisms = {
-                'Clostridium perfringens percentage' : "CP",
-                'Bacteroides fragilis percentage': "BF",
-                "Bifidobacterium bifidum percentage" : "BB"}
-    # organisms = {
-    #              'Clostridium perfringens percentage' : "CP",
-    #              # 'Phocaeicola vulgatus percentage': "PV",
-    #              # 'Ruminococcus gnavus percentage': "RG",
-    #              'Bacteroides fragilis percentage': "BF",
-    #              # "Faecalibacterium prausnitzii_I percentage": "FP",
-    #              # "Bacteroides uniformis percentage" : "BU",
-    #              "Bifidobacterium bifidum percentage" : "BB"
-    #              # "Prevotella copri percentage" : "PC",
-    #              # "Mediterraneibacter lactaris percentage": "ML",
-    #              # "Fusicatenibacter saccharivorans percentage": "FS"
-    #              }
+                 'Clostridium perfringens percentage' : "CP"
+                 # 'Phocaeicola vulgatus percentage': "PV",
+                 # 'Ruminococcus gnavus percentage': "RG",
+                 # 'Bacteroides fragilis percentage': "BF",
+                 # "Faecalibacterium prausnitzii_I percentage": "FP",
+                 # "Bacteroides uniformis percentage" : "BU",
+                 # "Bifidobacterium bifidum percentage" : "BB",
+                 # "Prevotella copri percentage" : "PC",
+                 # "Mediterraneibacter lactaris percentage": "ML",
+                 # "Fusicatenibacter saccharivorans percentage": "FS"
+                 }
     # organisms = {'Bacteroides fragilis percentage': "BF",
     #              "Faecalibacterium prausnitzii_I percentage": "FP",
     #              "Bacteroides uniformis percentage" : "BU",

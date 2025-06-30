@@ -4,6 +4,38 @@ library(gt)
 library(reshape2)
 library(patchwork)
 library(ggpubr)
+library(tidyr)
+
+summarize_bacteria_counts <- function(data) {
+  # Rename for consistency
+  colnames(data) <- c("Sample", "Study.Group", "CP", "HM")
+
+  # List of bacteria and thresholds
+  bacteria <- c("CP", "HM")
+  study_groups <- c("UC", "CD", "Control")
+
+  # Initialize result container
+  result <- data.frame()
+
+  for (bact in bacteria) {
+    for (grp in study_groups) {
+      subset <- data %>% filter(Study.Group == grp)
+      total_count <- sum(subset[[bact]]  > 0, na.rm = TRUE)
+      count_above_0.001 <- sum(subset[[bact]] > 0.001, na.rm = TRUE)
+      count_above_0.01  <- sum(subset[[bact]] > 0.01, na.rm = TRUE)
+
+      result <- bind_rows(result, data.frame(
+        Bacterium = bact,
+        `Study Group` = grp,
+        `Total Count` = total_count,
+        `Total Count above 0.001` = count_above_0.001,
+        `Total Count above 0.01` = count_above_0.01
+      ))
+    }
+  }
+
+  return(result)
+}
 
 load_datasets <- function()
 {
@@ -63,31 +95,39 @@ generate_dataset_metadata <- function (original_dataset)
 {
   ##MARS_IBS_2020 this is an IBS dataset
 
-  ibd <- c("No", "No", "No", "Yes", "No", "No", "No", "No", "Yes", "No", "No")
-  datasets <- c("ERAWIJANTARI_GASTRIC_CANCER_2020",
-                "YACHIDA_CRC_2019",
-                "KIM_ADENOMAS_2020",
-                "FRANZOSA_IBD_2019",
-                "MARS_IBS_2020",
-                "KANG_AUTISM_2017",
-                "JACOBS_IBD_FAMILIES_2016",
-                "SINHA_CRC_2016",
-                "iHMP_IBDMDB_2019",
-                "WANG_ESRD_2020",
-                "POYET_BIO_ML_2019")
-  sequencing <- c("16S", "16S", "16S", "WGS", "16S", "16S", "16S", "16S", "WGS", "16S", "16S")
+  ibd <- c("Yes", "Yes")
+  datasets <- c("FRANZOSA_IBD_2019",
+                "iHMP_IBDMDB_2019")
+  sequencing <- c("WGS", "WGS")
 
-  healthy_control_labels <- list("ERAWIJANTARI_GASTRIC_CANCER_2020" = "Healthy",
-                                 "YACHIDA_CRC_2019" = "Healthy",
-                                 "KIM_ADENOMAS_2020" = "Control",
-                                 "FRANZOSA_IBD_2019" = "Control",
-                                 "MARS_IBS_2020" = "H",
-                                 "KANG_AUTISM_2017" = "Neurotypical",
-                                 "JACOBS_IBD_FAMILIES_2016" = "Normal",
-                                 "SINHA_CRC_2016" = 0,
-                                 "iHMP_IBDMDB_2019" = "nonIBD",
-                                 "WANG_ESRD_2020" = "Control",
-                                 "POYET_BIO_ML_2019" = "ALL_HEALTHY")
+  healthy_control_labels <- list("FRANZOSA_IBD_2019" = "Control",
+                                 "iHMP_IBDMDB_2019" = "nonIBD")
+  
+  #   ibd <- c("No", "No", "No", "Yes", "No", "No", "No", "No", "Yes", "No", "No")
+  # datasets <- c("ERAWIJANTARI_GASTRIC_CANCER_2020",
+  #               "YACHIDA_CRC_2019",
+  #               "KIM_ADENOMAS_2020",
+  #               "FRANZOSA_IBD_2019",
+  #               "MARS_IBS_2020",
+  #               "KANG_AUTISM_2017",
+  #               "JACOBS_IBD_FAMILIES_2016",
+  #               "SINHA_CRC_2016",
+  #               "iHMP_IBDMDB_2019",
+  #               "WANG_ESRD_2020",
+  #               "POYET_BIO_ML_2019")
+  # sequencing <- c("16S", "16S", "16S", "WGS", "16S", "16S", "16S", "16S", "WGS", "16S", "16S")
+
+    # healthy_control_labels <- list("ERAWIJANTARI_GASTRIC_CANCER_2020" = "Healthy",
+    #                              "YACHIDA_CRC_2019" = "Healthy",
+    #                              "KIM_ADENOMAS_2020" = "Control",
+    #                              "FRANZOSA_IBD_2019" = "Control",
+    #                              "MARS_IBS_2020" = "H",
+    #                              "KANG_AUTISM_2017" = "Neurotypical",
+    #                              "JACOBS_IBD_FAMILIES_2016" = "Normal",
+    #                              "SINHA_CRC_2016" = 0,
+    #                              "iHMP_IBDMDB_2019" = "nonIBD",
+    #                              "WANG_ESRD_2020" = "Control",
+    #                              "POYET_BIO_ML_2019" = "ALL_HEALTHY")
   experiments_metadata <- data.frame(
     study_names = datasets,
     ibd = ibd,
@@ -237,7 +277,7 @@ generate_plots <- function(filtered_tables, specific_metadata, plots_path) {
 fishers_exact_test <- function (data, condition, healthy_label)
   {
     data_fisher <- data %>%
-      mutate(Perfringens_Present = ifelse(`Clostridium_P perfringens_percentage` > 0.001, 1, 0))
+      mutate(Perfringens_Present = ifelse(`Hathewaya massiliensis_percentage` > 0.001, 1, 0))
 
     # Summarize the counts of Perfringens presence and absence for each Study Group
     summary_table <- data_fisher %>%
@@ -284,7 +324,10 @@ wilcoxon_test <- function(data, table_name, healthy_label, threshold) {
   }
   else
   {
+    print("asd")
     data <- data %>% filter(`Hathewaya massiliensis_percentage` != 0)
+    summary_table <- summarize_bacteria_counts(data)
+    print(summary_table)
   }
   # Log-transform the data (keeping zeros as log1p(0) = 0)
   data <- data %>%
@@ -322,7 +365,7 @@ wilcoxon_test <- function(data, table_name, healthy_label, threshold) {
 
   annotations <- data.frame(
     x = c(2, 3),  # CD vs Control (left) and Control vs UC (right)
-    y = rep(max_y * 0.35, 2),
+    y = rep(max_y * 0.45, 2),
     label = annotated_p_values
   )
 
@@ -358,7 +401,7 @@ group_means_raw <- group_means_raw %>%
 # Add mean annotations for each group
   group_means_annotations <- data.frame(
   x = unique(sorted_groups),  # Use updated x-axis labels
-  y = rep(max_y * 0.45, length(groups)),  # Position of means
+  y = rep(max_y * 0.50, length(groups)),  # Position of means
   label = paste0("Mean = ", signif(group_means_raw$Mean_Raw_Abundance, digits = 3))
 )
 # group_means_annotations <- group_means_annotations %>%
@@ -383,7 +426,7 @@ p <- ggplot(data, aes(x = Study.Group, y = Log_Abundance)) +
        x = "Condition",
        y = "Log Scale HM") +
   scale_y_continuous(limits = c(min(data$Log_Abundance, na.rm = TRUE), max_y), expand = c(0, 0))
-  print(p)
+  # print(p)
   p <- p +
   scale_y_continuous(expand = expansion(mult = c(0.1, 0.2))) +  # Increase top margin for labels
   geom_text(data = annotations,
@@ -393,11 +436,11 @@ p <- p +
   # Add group means
   geom_text(data = group_means_annotations, aes(x = x, y = y, label = label),
             color = "darkgreen", size = 4, vjust = -0.5)
-  print(p)
+  # print(p)
 
   # Save the plot
-  filepath = paste("/home/direnc/results/microbiome_metabolome_curated_data/HM_wilcoxon_", table_name, "_", threshold, ".png", sep = "")
-  ggsave(filepath, p, width = 10, height = 8)
+  filepath = paste("/home/direnc/results/microbiome_metabolome_curated_data/HM_wilcoxon_", table_name, "_", threshold, ".pdf", sep = "")
+  ggsave(filepath, p, width = 10, height = 8, device=cairo_pdf, dpi = 600)
 
   # Return the test results
   # return(list(
